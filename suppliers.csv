@@ -1,0 +1,64 @@
+supplier_id,supplier_name,contact_name,phone,email,supplier_status,notes
+1,Northern Timber Supply,Mia Carter,0400 111 201,mia@northerntimber.example,Active,Fictional sample supplier
+2,Top End Forest Products,Liam Nguyen,0400 111 202,liam@topendforest.example,Active,Fictional sample supplier
+3,Riverland Logs,Olivia Smith,0400 111 203,olivia@riverlandlogs.example,Active,Fictional sample supplier
+4,"Rodriguez, Figueroa and Sanchez Timber",Brian Yang,0404332181,brian.4@rodriguez.example,Active,
+5,"Miller, Henderson and Johnson Timber",Jonathan Johnson,0413389083,jonathan.5@miller.example,Active,
+6,Baldwin Ltd Wood Co,Connie Lawrence,0437940265,connie.6@baldwin.example,Active,Synthetic sample supplier
+7,Blake and Sons Log Supply,Gina Moore,0411615594,gina.7@blake.example,Active,New supplier onboarded 2026
+8,Garcia-James Logging,Gregory Baker,0416184959,gregory.8@garcia-james.example,Active,
+9,Blair PLC Timber,Thomas Miller,0434131647,thomas.9@blair.example,Active,Long-term contract partner
+10,Calderon-Montgomery Forestry,Laura Bush,0455341928,laura.10@calderon-montgomery.example,Active,Synthetic sample supplier
+11,Stanley LLC Wood Co,Dr. Sharon James,0464835030,dr.11@stanley.example,Active,New supplier onboarded 2026
+12,Reid-Diaz Log Supply,Daniel Adams,0413953767,daniel.12@reid-diaz.example,Active,Synthetic sample supplier
+13,"Wong, Lynch and Jackson Forestry",Carla Gray,0488496965,carla.13@wong.example,Active,Synthetic sample supplier
+14,"Watts, Robinson and Nguyen Logging",Amy Underwood,0471012269,amy.14@watts.example,Active,New supplier onboarded 2026
+15,Morales-Jones Logging,Latoya Robbins,0478480184,latoya.15@morales-jones.example,Active,Long-term contract partner
+16,Rios Group Timber,Maria Thomas,0446270482,maria.16@rios.example,Active,
+17,Wright PLC Log Supply,Nicole Patterson,0489325288,nicole.17@wright.example,Inactive,
+18,"Ross, Robinson and Bright Log Supply",Ann Williams,0470154303,ann.18@ross.example,Inactive,
+19,Hernandez and Sons Timber,Jennifer Brown,0471822782,jennifer.19@hernandez.example,Active,
+20,Carlson-Mcdonald Wood Co,Juan Dunlap,0438346578,juan.20@carlson-mcdonald.example,Active,Synthetic sample supplier
+21,"Le, Maldonado and Herrera Forestry",Martin Rodriguez,0415098393,martin.21@le.example,Active,
+22,Moore-Smith Forestry,Michelle Stanton,0410518347,michelle.22@moore-smith.example,Active,Synthetic sample supplier
+23,Romero Inc Logging,Elizabeth Fowler,0497376311,elizabeth.23@romero.example,Active,Long-term contract partner
+24,"Gonzalez, Brooks and Martin Wood Co",Tammy Sellers,0467010651,tammy.24@gonzalez.example,Active,Synthetic sample supplier
+25,"Nguyen, Smith and Hickman Logging",Sandra Parker,0472624731,sandra.25@nguyen.example,Active,
+26,Allen PLC Timber,Angelica Tucker,0408013267,angelica.26@allen.example,Active,New supplier onboarded 2026
+27,Spence PLC Timber,Betty Alvarez,0426064746,betty.27@spence.example,Active,
+28,"Martin, Rose and Obrien Wood Co",Tanya Campos,0423430980,tanya.28@martin.example,Active,
+29,"Harris, Collins and Carney Timber",Jessica Holmes,0497882081,jessica.29@harris.example,Inactive,
+30,Wright Inc Logging,Kevin Hall,0413619399,kevin.30@wright.example,Active,
+31,Smith Ltd Wood Co,Crystal Whitehead,0499854353,crystal.31@smith.example,Active,Synthetic sample supplier
+32,Jones-Young Log Supply,Cindy Anderson,0475107991,cindy.32@jones-young.example,Active,Synthetic sample supplier
+33,"Johnston, Sanchez and Kennedy Logging",Brandon Hopkins,0442513542,brandon.33@johnston.example,Active,
+34,Henderson-Owens Log Supply,Megan Joyce,0498084124,megan.34@henderson-owens.example,Active,
+35,Brown Ltd Logging,Scott Wright,0424493534,scott.35@brown.example,Active,Long-term contract partner
+36,Herrera and Sons Timber,Donald Wright,0416400524,donald.36@herrera.example,Active,New supplier onboarded 2026
+37,Ramos PLC Logging,Matthew Fernandez,0468011280,matthew.37@ramos.example,Active,
+38,Novak and Sons Logging,John Lewis,0426204505,john.38@novak.example,Active,Synthetic sample supplier
+39,Barrera-Martin Timber,James House,0458692322,james.39@barrera-martin.example,Inactive,
+40,Mitchell-Horton Forestry,Rachel Stanley,0456342160,rachel.40@mitchell-horton.example,Inactive,Synthetic sample supplier
+41,Moore-Phillips Forestry,Lauren Daniels,0475433036,lauren.41@moore-phillips.example,Active,
+42,"Edwards, Williams and Woods Log Supply",Kim Brown,0458685014,kim.42@edwards.example,Active,Long-term contract partner
+43,"Miller, Lopez and Larson Timber",Cynthia Wilson,0419655698,cynthia.43@miller.example,Active,
+44,"Sanchez, Wheeler and Harvey Forestry",Kevin Mills,0440608835,kevin.44@sanchez.example,Active,Long-term contract partner
+45,Harris-Moran Logging,James Powers,0451484656,james.45@harris-moran.example,Active,
+46,Bryant-Hickman Forestry,Alexandra Howell,0436629946,alexandra.46@bryant-hickman.example,Active,
+47,"Ferrell, Jones and Lewis Log Supply",Timothy Ibarra,0443699577,timothy.47@ferrell.example,Active,Synthetic sample supplier
+48,Wood and Sons Logging,Joshua Turner,0472148951,joshua.48@wood.example,Active,Synthetic sample supplier
+49,"Rice, Contreras and Spencer Log Supply",Ashley Humphrey,0433200379,ashley.49@rice.example,Active,
+50,Wilson-Rodriguez Wood Co,Denise Jacobs,0469367632,denise.50@wilson-rodriguez.example,Active,
+51,"Cooper, Watts and Farrell Timber",Danielle Odonnell,0463287083,danielle.51@cooper.example,Inactive,
+52,Davis Group Wood Co,Amanda Cook,0427889579,amanda.52@davis.example,Active,
+53,Walsh LLC Wood Co,Jeremy Thornton,0487277434,jeremy.53@walsh.example,Active,
+54,"Smith, Jones and Ware Wood Co",Kimberly Davenport,0434714345,kimberly.54@smith.example,Active,
+55,"Tran, Jordan and Williams Timber",Timothy Stanton,0422362316,timothy.55@tran.example,Active,
+56,Nolan and Sons Wood Co,Mary Gomez,0460366909,mary.56@nolan.example,Active,
+57,"Henson, Russell and Oliver Log Supply",Timothy Hancock,0446688937,timothy.57@henson.example,Active,New supplier onboarded 2026
+58,Keith Inc Wood Co,Tim Patton,0406562729,tim.58@keith.example,Active,New supplier onboarded 2026
+59,Pham-Shields Logging,Debra Cobb,0490162720,debra.59@pham-shields.example,Active,Long-term contract partner
+60,Reyes Inc Forestry,Courtney Velasquez,0475564641,courtney.60@reyes.example,Active,
+61,Bailey-Hoover Timber,Courtney Keller,0453100330,courtney.61@bailey-hoover.example,Active,Synthetic sample supplier
+62,Murphy-Lin Forestry,Diana May,0471937452,diana.62@murphy-lin.example,Active,
+63,Frazier-Anthony Forestry,Alexander Wiley,0441904966,alexander.63@frazier-anthony.example,Inactive,Synthetic sample supplier

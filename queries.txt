@@ -1,0 +1,131 @@
+// =====================================================================
+// PRT563 Assessment 3 - Group 5
+// queries.txt - Task 3: four Cypher use cases of increasing complexity
+// Run after import.txt. 
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// USE CASE 1 (Basic: pattern match, filter, one hop)
+// Scenario: At the start of each shift the quality supervisor needs a list
+// of every finished plank that did not pass inspection (Hold or Rejected),
+// with its grade, so the planks can be pulled from the dispatch area and
+// re-inspected.
+// ---------------------------------------------------------------------
+MATCH (p:Plank)-[:GRADED_AS]->(g:Grade)
+WHERE p.quality_status IN ['Hold', 'Rejected']
+RETURN p.plank_id            AS plank,
+       p.quality_status      AS status,
+       g.grade_code          AS grade,
+       g.grade_type          AS grade_type,
+       p.finished_length_mm  AS length_mm
+ORDER BY status DESC, plank;
+
+
+// ---------------------------------------------------------------------
+// USE CASE 2 (Intermediate: multi-hop, OPTIONAL MATCH, staged aggregation)
+// Scenario: Maintenance planning. For every primary saw, show how many
+// flitches it cut, its total and average defect count, and how many of the
+// planks made from its flitches were rejected. Saws with high defect rates
+// are candidates for blade replacement or recalibration.
+// Defects are summed per flitch BEFORE joining to planks, so a flitch that
+// produced several planks is not counted more than once.
+// ---------------------------------------------------------------------
+MATCH (m:Machine {machine_type: 'Primary Saw'})<-[:CUT_ON]-(f:Flitch)
+OPTIONAL MATCH (f)-[:PRODUCED]->(p:Plank)
+WITH m, f,
+     count(p) AS planks,
+     sum(CASE WHEN p.quality_status = 'Rejected' THEN 1 ELSE 0 END) AS rejected
+WITH m,
+     count(f)               AS flitches_cut,
+     sum(f.defect_count)    AS total_defects,
+     round(avg(f.defect_count), 2) AS avg_defects_per_flitch,
+     sum(planks)            AS planks_produced,
+     sum(rejected)          AS planks_rejected
+RETURN m.machine_id     AS machine,
+       m.machine_name   AS name,
+       m.machine_status AS status,
+       flitches_cut, total_defects, avg_defects_per_flitch,
+       planks_produced, planks_rejected
+ORDER BY total_defects DESC, avg_defects_per_flitch DESC, machine
+LIMIT 10;
+
+
+// ---------------------------------------------------------------------
+// USE CASE 3 (Advanced: end-to-end traceability path + recall scope)
+// Scenario: A customer returns plank 313 as defective. The mill must
+// (a) trace it back through flitch, log, supplier and forest of origin,
+// and (b) find every OTHER plank cut from the same log, because a defect in
+// the log may affect them too. Planks that already passed inspection are
+// flagged for re-checking.
+// In SQL this needs a 5-table join plus a self-join. In Cypher it is a
+// single path pattern followed by an expansion back down the tree.
+// ---------------------------------------------------------------------
+MATCH (fo:Forest)<-[:ORIGINATED_FROM]-(l:Log)<-[:SUPPLIED]-(s:Supplier),
+      (l)-[:SAWN_INTO]->(f:Flitch)-[:PRODUCED]->(p:Plank {plank_id: 313})
+MATCH (f)-[:CUT_ON]->(m:Machine)
+MATCH (l)-[:SAWN_INTO]->(sf:Flitch)-[:PRODUCED]->(sibling:Plank)
+WHERE sibling <> p
+RETURN p.plank_id          AS returned_plank,
+       f.flitch_id         AS flitch,
+       m.machine_name      AS cut_on,
+       l.log_id            AS log,
+       l.status            AS log_status,
+       s.supplier_name     AS supplier,
+       fo.forest_name      AS forest,
+       coalesce(fo.certification, 'Uncertified') AS certification,
+       collect(toString(sibling.plank_id) + ' (' + sibling.quality_status + ')') AS same_log_planks,
+       [x IN collect(sibling) WHERE x.quality_status = 'Passed' | x.plank_id] AS recheck_required;
+
+// Visual version for a screenshot (shows the full traceability sub-graph):
+MATCH path = (:Supplier)-[:SUPPLIED]->(l:Log)-[:SAWN_INTO]->(:Flitch)-[:PRODUCED]->(:Plank {plank_id: 313})
+MATCH branch = (l)-[:SAWN_INTO]->(:Flitch)-[:PRODUCED]->(:Plank)
+MATCH origin = (l)-[:ORIGINATED_FROM]->(:Forest)
+RETURN path, branch, origin;
+
+
+// ---------------------------------------------------------------------
+// USE CASE 4 (Complex: 4-hop traversal, grouping, conditional aggregation,
+//             derived ratios, null handling)
+// Scenario: The sustainability manager wants to know whether forest
+// certification (FSC, PEFC, AFS or none) is linked to product quality and
+// raw-material yield. For each certification scheme it reports logs
+// processed, timber volume, average log stiffness, planks produced,
+// planks per cubic metre, pass rate and average defects per flitch.
+// ---------------------------------------------------------------------
+MATCH (fo:Forest)<-[:ORIGINATED_FROM]-(l:Log)
+WITH coalesce(fo.certification, 'Uncertified') AS certification, l
+OPTIONAL MATCH (l)-[:SAWN_INTO]->(f:Flitch)
+OPTIONAL MATCH (f)-[:PRODUCED]->(p:Plank)
+WITH certification, l,
+     collect(DISTINCT f) AS flitches,
+     collect(p)          AS planks
+WITH certification,
+     count(l)                                   AS logs,
+     round(sum(l.volume_m3), 2)                 AS volume_m3,
+     round(avg(l.stiffness_moe))                AS avg_moe,
+     sum(size(flitches))                        AS flitches,
+     sum(reduce(d = 0, x IN flitches | d + x.defect_count)) AS defects,
+     sum(size(planks))                          AS planks,
+     sum(size([x IN planks WHERE x.quality_status = 'Passed'])) AS passed
+WHERE planks > 0
+RETURN certification, logs, volume_m3, avg_moe, flitches, planks,
+       round(toFloat(planks) / volume_m3, 2)            AS planks_per_m3,
+       round(100.0 * passed / planks, 1)                AS pass_rate_pct,
+       round(toFloat(defects) / flitches, 2)            AS avg_defects_per_flitch
+ORDER BY pass_rate_pct DESC;
+
+
+// ---------------------------------------------------------------------
+// BONUS (data-integrity check - useful for the Discussion section)
+// Scenario: Logs marked 'Rejected' at infeed should never be sawn. This
+// finds rejected logs that still produced flitches and planks, which shows
+// a gap in the old relational design: no CHECK constraint can span two
+// tables.
+// ---------------------------------------------------------------------
+MATCH (l:Log {status: 'Rejected'})-[:SAWN_INTO]->(f:Flitch)
+OPTIONAL MATCH (f)-[:PRODUCED]->(p:Plank)
+RETURN l.log_id AS rejected_log,
+       collect(DISTINCT f.flitch_id) AS flitches,
+       collect(p.plank_id)           AS planks
+ORDER BY rejected_log;

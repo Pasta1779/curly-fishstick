@@ -1,0 +1,229 @@
+// =====================================================================
+// PRT563 Assessment 3 - Group 5
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// 0. (Optional) Clean start - deletes everything in the database
+// ---------------------------------------------------------------------
+MATCH (n) DETACH DELETE n;
+
+
+// ---------------------------------------------------------------------
+// 1. CONSTRAINTS AND INDEXES
+//    Uniqueness constraints replace the relational PRIMARY KEYs. Each one
+//    also creates a backing RANGE index, so the MATCH ... {id: ...} lookups
+//    used when building relationships stay fast as the data grows.
+// ---------------------------------------------------------------------
+CREATE CONSTRAINT supplier_id_unique IF NOT EXISTS
+FOR (s:Supplier) REQUIRE s.supplier_id IS UNIQUE;
+
+CREATE CONSTRAINT forest_id_unique IF NOT EXISTS
+FOR (f:Forest) REQUIRE f.forest_id IS UNIQUE;
+
+CREATE CONSTRAINT grade_code_unique IF NOT EXISTS
+FOR (g:Grade) REQUIRE g.grade_code IS UNIQUE;
+
+CREATE CONSTRAINT cant_size_id_unique IF NOT EXISTS
+FOR (c:CantSize) REQUIRE c.cant_size_id IS UNIQUE;
+
+CREATE CONSTRAINT machine_id_unique IF NOT EXISTS
+FOR (m:Machine) REQUIRE m.machine_id IS UNIQUE;
+
+CREATE CONSTRAINT log_id_unique IF NOT EXISTS
+FOR (l:Log) REQUIRE l.log_id IS UNIQUE;
+
+CREATE CONSTRAINT batch_id_unique IF NOT EXISTS
+FOR (b:Batch) REQUIRE b.batch_id IS UNIQUE;
+
+CREATE CONSTRAINT flitch_id_unique IF NOT EXISTS
+FOR (f:Flitch) REQUIRE f.flitch_id IS UNIQUE;
+
+CREATE CONSTRAINT plank_id_unique IF NOT EXISTS
+FOR (p:Plank) REQUIRE p.plank_id IS UNIQUE;
+
+// Secondary indexes on properties the queries filter on most
+// (the relational equivalent of CREATE INDEX on non-key columns).
+CREATE INDEX plank_quality_status IF NOT EXISTS
+FOR (p:Plank) ON (p.quality_status);
+
+CREATE INDEX log_status IF NOT EXISTS
+FOR (l:Log) ON (l.status);
+
+CREATE INDEX log_received_date IF NOT EXISTS
+FOR (l:Log) ON (l.received_date);
+
+CREATE INDEX forest_certification IF NOT EXISTS
+FOR (f:Forest) ON (f.certification);
+
+CREATE INDEX machine_type_status IF NOT EXISTS
+FOR (m:Machine) ON (m.machine_type, m.machine_status);
+
+CREATE INDEX supplier_status IF NOT EXISTS
+FOR (s:Supplier) ON (s.supplier_status);
+
+// Full-text index for free-text searching of supplier and forest names
+CREATE FULLTEXT INDEX name_search IF NOT EXISTS
+FOR (n:Supplier|Forest) ON EACH [n.supplier_name, n.forest_name];
+
+// Neo4j 4.4 note: use  "CREATE CONSTRAINT name IF NOT EXISTS ON (s:Supplier)
+// ASSERT s.supplier_id IS UNIQUE"  and  "CREATE INDEX name IF NOT EXISTS
+// FOR (p:Plank) ON (p.quality_status)".
+
+// Check:  SHOW CONSTRAINTS;   SHOW INDEXES;
+
+
+// ---------------------------------------------------------------------
+// 2. NODES (one CSV per relational table; MERGE makes re-runs safe)
+//    Foreign-key columns are NOT stored as node properties - they become
+//    relationships in step 3.
+// ---------------------------------------------------------------------
+
+// 2.1 Supplier  (from Supplier)
+LOAD CSV WITH HEADERS FROM 'file:///suppliers.csv' AS row
+MERGE (s:Supplier {supplier_id: toInteger(row.supplier_id)})
+SET s.supplier_name   = row.supplier_name,
+    s.contact_name    = row.contact_name,
+    s.phone           = row.phone,
+    s.email           = row.email,
+    s.supplier_status = row.supplier_status,
+    s.notes           = row.notes;
+
+// 2.2 Forest  (from ForestOrigin)
+LOAD CSV WITH HEADERS FROM 'file:///forests.csv' AS row
+MERGE (f:Forest {forest_id: toInteger(row.forest_id)})
+SET f.forest_name   = row.forest_name,
+    f.location      = row.location,
+    f.compartment   = row.compartment,
+    f.certification = row.certification;      // empty -> null (uncertified)
+
+// 2.3 Grade  (from GradeStandard)
+LOAD CSV WITH HEADERS FROM 'file:///grades.csv' AS row
+MERGE (g:Grade {grade_code: row.grade_code})
+SET g.grade_type  = row.grade_type,
+    g.description = row.description;
+
+// 2.4 CantSize  (from CantSize)
+LOAD CSV WITH HEADERS FROM 'file:///cant_sizes.csv' AS row
+MERGE (c:CantSize {cant_size_id: toInteger(row.cant_size_id)})
+SET c.width_mm           = toInteger(row.width_mm),
+    c.height_mm          = toInteger(row.height_mm),
+    c.standard_length_mm = toInteger(row.standard_length_mm);
+
+// 2.5 Machine  (from Machine)
+LOAD CSV WITH HEADERS FROM 'file:///machines.csv' AS row
+MERGE (m:Machine {machine_id: toInteger(row.machine_id)})
+SET m.machine_name   = row.machine_name,
+    m.machine_type   = row.machine_type,
+    m.machine_status = row.machine_status;
+
+// 2.6 Log  (from LogInfeed)
+LOAD CSV WITH HEADERS FROM 'file:///logs.csv' AS row
+MERGE (l:Log {log_id: toInteger(row.log_id)})
+SET l.received_date = date(row.received_date),
+    l.log_length_mm = toInteger(row.log_length_mm),
+    l.diameter_mm   = toInteger(row.diameter_mm),
+    l.volume_m3     = toFloat(row.volume_m3),
+    l.stiffness_moe = toFloat(row.stiffness_moe),   // empty -> null
+    l.status        = row.status;
+
+// 2.7 Batch  (from ProcessingBatch)
+//     '2026-08-20 09:30' -> '2026-08-20T09:30' -> LocalDateTime
+LOAD CSV WITH HEADERS FROM 'file:///batches.csv' AS row
+MERGE (b:Batch {batch_id: toInteger(row.batch_id)})
+SET b.started_at   = localdatetime(replace(row.started_at, ' ', 'T')),
+    b.completed_at = CASE WHEN row.completed_at IS NULL THEN null
+                          ELSE localdatetime(replace(row.completed_at, ' ', 'T')) END,
+    b.status       = row.status;
+
+// 2.8 Flitch  (from Flitch)
+LOAD CSV WITH HEADERS FROM 'file:///flitches.csv' AS row
+MERGE (f:Flitch {flitch_id: toInteger(row.flitch_id)})
+SET f.cut_pattern  = row.cut_pattern,
+    f.defect_count = toInteger(row.defect_count),
+    f.created_at   = localdatetime(replace(row.created_at, ' ', 'T'));
+
+// 2.9 Plank  (from Plank)
+LOAD CSV WITH HEADERS FROM 'file:///planks.csv' AS row
+MERGE (p:Plank {plank_id: toInteger(row.plank_id)})
+SET p.finished_length_mm    = toInteger(row.finished_length_mm),
+    p.finished_width_mm     = toInteger(row.finished_width_mm),
+    p.finished_thickness_mm = toInteger(row.finished_thickness_mm),
+    p.quality_status        = row.quality_status;
+
+
+// ---------------------------------------------------------------------
+// 3. RELATIONSHIPS (one per relational foreign key)
+//    Direction follows the physical flow of timber through the mill:
+//    Supplier -> Log -> Flitch -> Plank
+// ---------------------------------------------------------------------
+
+// 3.1 LogInfeed.supplier_id  ->  (:Supplier)-[:SUPPLIED]->(:Log)
+LOAD CSV WITH HEADERS FROM 'file:///logs.csv' AS row
+MATCH (s:Supplier {supplier_id: toInteger(row.supplier_id)})
+MATCH (l:Log      {log_id:      toInteger(row.log_id)})
+MERGE (s)-[:SUPPLIED]->(l);
+
+// 3.2 LogInfeed.forest_id  ->  (:Log)-[:ORIGINATED_FROM]->(:Forest)
+LOAD CSV WITH HEADERS FROM 'file:///logs.csv' AS row
+MATCH (l:Log    {log_id:    toInteger(row.log_id)})
+MATCH (f:Forest {forest_id: toInteger(row.forest_id)})
+MERGE (l)-[:ORIGINATED_FROM]->(f);
+
+// 3.3 Flitch.log_id  ->  (:Log)-[:SAWN_INTO]->(:Flitch)
+LOAD CSV WITH HEADERS FROM 'file:///flitches.csv' AS row
+MATCH (l:Log    {log_id:    toInteger(row.log_id)})
+MATCH (f:Flitch {flitch_id: toInteger(row.flitch_id)})
+MERGE (l)-[:SAWN_INTO]->(f);
+
+// 3.4 Flitch.cant_size_id  ->  (:Flitch)-[:HAS_CANT_SIZE]->(:CantSize)
+LOAD CSV WITH HEADERS FROM 'file:///flitches.csv' AS row
+MATCH (f:Flitch   {flitch_id:    toInteger(row.flitch_id)})
+MATCH (c:CantSize {cant_size_id: toInteger(row.cant_size_id)})
+MERGE (f)-[:HAS_CANT_SIZE]->(c);
+
+// 3.5 Flitch.machine_id  ->  (:Flitch)-[:CUT_ON]->(:Machine)
+LOAD CSV WITH HEADERS FROM 'file:///flitches.csv' AS row
+MATCH (f:Flitch  {flitch_id:  toInteger(row.flitch_id)})
+MATCH (m:Machine {machine_id: toInteger(row.machine_id)})
+MERGE (f)-[:CUT_ON]->(m);
+
+// 3.6 Flitch.batch_id (nullable)  ->  (:Flitch)-[:PROCESSED_IN]->(:Batch)
+//     Flitches with no batch simply get no relationship (no NULL needed).
+LOAD CSV WITH HEADERS FROM 'file:///flitches.csv' AS row
+WITH row WHERE row.batch_id IS NOT NULL
+MATCH (f:Flitch {flitch_id: toInteger(row.flitch_id)})
+MATCH (b:Batch  {batch_id:  toInteger(row.batch_id)})
+MERGE (f)-[:PROCESSED_IN]->(b);
+
+// 3.7 Plank.flitch_id  ->  (:Flitch)-[:PRODUCED]->(:Plank)
+LOAD CSV WITH HEADERS FROM 'file:///planks.csv' AS row
+MATCH (f:Flitch {flitch_id: toInteger(row.flitch_id)})
+MATCH (p:Plank  {plank_id:  toInteger(row.plank_id)})
+MERGE (f)-[:PRODUCED]->(p);
+
+// 3.8 Plank.grade_code  ->  (:Plank)-[:GRADED_AS]->(:Grade)
+LOAD CSV WITH HEADERS FROM 'file:///planks.csv' AS row
+MATCH (p:Plank {plank_id:   toInteger(row.plank_id)})
+MATCH (g:Grade {grade_code: row.grade_code})
+MERGE (p)-[:GRADED_AS]->(g);
+
+
+// ---------------------------------------------------------------------
+// 4. VERIFICATION - compare with the row counts of the relational tables
+// ---------------------------------------------------------------------
+// Expected nodes: Batch 84, CantSize 99, Flitch 84, Forest 63, Grade 63,
+//                 Log 85, Machine 63, Plank 96, Supplier 63   (total 700)
+MATCH (n)
+RETURN labels(n)[0] AS label, count(*) AS nodes
+ORDER BY label;
+
+// Expected relationships: CUT_ON 84, GRADED_AS 96, HAS_CANT_SIZE 84,
+//   ORIGINATED_FROM 85, PROCESSED_IN 79, PRODUCED 96, SAWN_INTO 84,
+//   SUPPLIED 85   (total 693)
+MATCH ()-[r]->()
+RETURN type(r) AS relationship, count(*) AS total
+ORDER BY relationship;
+
+// Show the graph data model (use this for the Task 1 screenshot)
+CALL db.schema.visualization();

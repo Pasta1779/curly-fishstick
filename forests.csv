@@ -1,0 +1,64 @@
+forest_id,forest_name,location,compartment,certification
+1,Tumbarumba Block A,Tumbarumba NSW,A-17,FSC
+2,Hervey Bay Plantation B,Hervey Bay QLD,B-08,PEFC
+3,Northern Plantation C,Northern NSW,C-11,FSC
+4,Hervey Plantation E4,Hervey Bay QLD,B-20,FSC
+5,Launceston Plantation E1,Launceston TAS,F-35,
+6,Coffs Plantation C2,Coffs Harbour NSW,F-01,
+7,Devonport Plantation D2,Devonport TAS,G-24,
+8,Bathurst Plantation B7,Bathurst NSW,C-34,AFS
+9,Mount Plantation E8,Mount Gambier SA,H-28,AFS
+10,Bunbury Plantation B2,Bunbury WA,E-29,PEFC
+11,Launceston Plantation D7,Launceston TAS,F-02,
+12,Devonport Plantation C3,Devonport TAS,H-14,AFS
+13,Launceston Plantation C6,Launceston TAS,E-39,AFS
+14,Ballarat Plantation A9,Ballarat VIC,D-06,PEFC
+15,Bathurst Plantation D8,Bathurst NSW,D-31,
+16,Toowoomba Plantation A2,Toowoomba QLD,E-15,
+17,Bathurst Plantation B5,Bathurst NSW,F-31,AFS
+18,Nelson Plantation F9,Nelson Bay NSW,F-23,
+19,Manjimup Plantation C5,Manjimup WA,D-08,PEFC
+20,Bunbury Plantation A9,Bunbury WA,C-13,PEFC
+21,Bathurst Plantation D5,Bathurst NSW,E-07,PEFC
+22,Manjimup Plantation B6,Manjimup WA,C-20,FSC
+23,Bathurst Plantation E3,Bathurst NSW,E-03,FSC
+24,Ballarat Plantation C3,Ballarat VIC,H-07,FSC
+25,Mount Plantation C8,Mount Gambier SA,H-29,AFS
+26,Northern Plantation A5,Northern NSW,H-08,FSC
+27,Nelson Plantation D2,Nelson Bay NSW,A-10,PEFC
+28,Launceston Plantation E5,Launceston TAS,B-16,FSC
+29,Ballarat Plantation D4,Ballarat VIC,G-29,
+30,Manjimup Plantation E7,Manjimup WA,E-37,FSC
+31,Mount Plantation F2,Mount Gambier SA,D-14,AFS
+32,Coffs Plantation A3,Coffs Harbour NSW,D-12,FSC
+33,Northern Plantation A7,Northern NSW,H-39,
+34,Manjimup Plantation A4,Manjimup WA,E-19,
+35,Hervey Plantation F4,Hervey Bay QLD,E-38,PEFC
+36,Nelson Plantation A9,Nelson Bay NSW,D-10,AFS
+37,Devonport Plantation B2,Devonport TAS,A-11,AFS
+38,Mount Plantation F5,Mount Gambier SA,H-08,
+39,Bathurst Plantation C7,Bathurst NSW,E-33,
+40,Toowoomba Plantation A1,Toowoomba QLD,G-21,AFS
+41,Tumbarumba Plantation A4,Tumbarumba NSW,A-18,FSC
+42,Launceston Plantation B8,Launceston TAS,H-18,PEFC
+43,Mount Plantation D8,Mount Gambier SA,B-31,AFS
+44,Nelson Plantation C6,Nelson Bay NSW,B-11,AFS
+45,Nelson Plantation F8,Nelson Bay NSW,E-26,FSC
+46,Toowoomba Plantation A6,Toowoomba QLD,E-21,FSC
+47,Launceston Plantation D9,Launceston TAS,A-35,
+48,Nelson Plantation A4,Nelson Bay NSW,F-40,
+49,Coffs Plantation D1,Coffs Harbour NSW,D-18,PEFC
+50,Batemans Plantation C8,Batemans Bay NSW,H-08,FSC
+51,Coffs Plantation E4,Coffs Harbour NSW,C-20,FSC
+52,Ballarat Plantation D2,Ballarat VIC,D-08,
+53,Hervey Plantation F3,Hervey Bay QLD,H-19,AFS
+54,Nelson Plantation D8,Nelson Bay NSW,D-30,PEFC
+55,Nelson Plantation B9,Nelson Bay NSW,C-05,AFS
+56,Launceston Plantation D6,Launceston TAS,E-01,AFS
+57,Bathurst Plantation C8,Bathurst NSW,C-29,
+58,Bunbury Plantation C9,Bunbury WA,G-30,AFS
+59,Devonport Plantation B4,Devonport TAS,G-15,
+60,Tumbarumba Plantation C8,Tumbarumba NSW,G-25,PEFC
+61,Toowoomba Plantation A3,Toowoomba QLD,F-07,
+62,Hervey Plantation E8,Hervey Bay QLD,A-10,
+63,Devonport Plantation F3,Devonport TAS,B-31,AFS

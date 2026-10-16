@@ -1,0 +1,209 @@
+// ------------------------------------------------
+// TASK 4 - CENTRALITY
+// Use case: Supply-chain disruption risk.
+// Every plank's traceability chain runs through shared resources:
+// a supplier, a forest, a saw, a batch and a cant size. If one of those
+// resources fails (a forest loses certification, a saw breaks down, a batch
+// is found to be contaminated), which one would cut the most traceability
+// paths across the mill? We compare three centrality measures to see which
+// one actually answers that question.
+// ------------------------------------------------
+
+// 4.1 Project the whole mill graph into memory as UNDIRECTED, so that
+//     "connectedness" is measured both up and down the supply chain.
+CALL gds.graph.drop('millGraph', false) YIELD graphName;
+
+CALL gds.graph.project(
+  'millGraph',
+  ['Supplier','Forest','Log','Flitch','Plank','Machine','CantSize','Batch','Grade'],
+  { ALL: { type: '*', orientation: 'UNDIRECTED' } }
+)
+YIELD graphName, nodeCount, relationshipCount;
+// Expected: nodeCount 700, relationshipCount 1386 (693 x 2 for undirected)
+
+// 4.2 Estimate memory before running (good practice for Big Data)
+CALL gds.betweenness.stream.estimate('millGraph', {})
+YIELD requiredMemory, nodeCount, relationshipCount;
+
+// 4.3 Experiment A - DEGREE CENTRALITY (how many direct connections)
+CALL gds.degree.stream('millGraph')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS n, score
+WHERE NOT n:Log AND NOT n:Flitch AND NOT n:Plank          // shared resources only
+RETURN labels(n)[0] AS type,
+       coalesce(n.supplier_name, n.forest_name, n.machine_name,
+                n.grade_code, toString(n.batch_id), toString(n.cant_size_id)) AS resource,
+       score AS degree
+ORDER BY degree DESC, resource
+LIMIT 10;
+
+// 4.4 Experiment B - PAGERANK (connections to well-connected nodes)
+CALL gds.pageRank.stream('millGraph', { maxIterations: 20, dampingFactor: 0.85 })
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS n, score
+WHERE NOT n:Log AND NOT n:Flitch AND NOT n:Plank
+RETURN labels(n)[0] AS type,
+       coalesce(n.supplier_name, n.forest_name, n.machine_name,
+                n.grade_code, toString(n.batch_id), toString(n.cant_size_id)) AS resource,
+       round(score, 3) AS pagerank
+ORDER BY pagerank DESC, resource
+LIMIT 10;
+
+// 4.5 Experiment C - BETWEENNESS CENTRALITY (how many shortest paths
+//     between other nodes pass THROUGH this node = bridge / bottleneck)
+CALL gds.betweenness.stream('millGraph')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS n, score
+WHERE NOT n:Log AND NOT n:Flitch AND NOT n:Plank
+RETURN labels(n)[0] AS type,
+       coalesce(n.supplier_name, n.forest_name, n.machine_name,
+                n.grade_code, toString(n.batch_id), toString(n.cant_size_id)) AS resource,
+       round(score, 1) AS betweenness
+ORDER BY betweenness DESC, resource
+LIMIT 10;
+
+// 4.6 Write the betweenness score back to the database so that normal
+//     Cypher queries (and dashboards) can use it.
+CALL gds.betweenness.write('millGraph', { writeProperty: 'betweenness' })
+YIELD nodePropertiesWritten, centralityDistribution
+RETURN nodePropertiesWritten, centralityDistribution.max AS maxScore;
+
+// 4.7 Put the result to work: the 5 most critical resources and how many
+//     finished planks depend on each one (its "blast radius").
+MATCH (r)
+WHERE (r:Supplier OR r:Forest OR r:Machine OR r:Batch) AND r.betweenness > 0
+WITH r ORDER BY r.betweenness DESC LIMIT 5
+// Supplier/Forest reach planks in 3 hops (via Log, Flitch); Machine/Batch in 2
+OPTIONAL MATCH (r)-[*1..3]-(p:Plank)
+RETURN labels(r)[0] AS type,
+       coalesce(r.supplier_name, r.forest_name, r.machine_name,
+                toString(r.batch_id)) AS resource,
+       round(r.betweenness, 1) AS betweenness,
+       count(DISTINCT p) AS planks_affected
+ORDER BY betweenness DESC;
+
+// 4.8 Clean up
+CALL gds.graph.drop('millGraph') YIELD graphName;
+
+
+// ------------------------------------------------
+// TASK 5 - SIMILARITY
+// Use case: Replacement-supplier recommendation.
+// Three suppliers that delivered logs are now 'Inactive'. To keep the same
+// timber flowing (and the same certification and traceability), purchasing
+// wants ACTIVE suppliers who source from the same forests. Suppliers are
+// compared by the set of forests their logs came from.
+// ------------------------------------------------
+
+// 5.1 Project a bipartite Supplier -> Forest graph. Supplier-[:SUPPLIED]->Log
+//     -[:ORIGINATED_FROM]->Forest is collapsed into one SOURCES_FROM
+//     relationship weighted by the number of logs (Cypher projection).
+CALL gds.graph.drop('supplierForest', false) YIELD graphName;
+
+MATCH (s:Supplier)-[:SUPPLIED]->(:Log)-[:ORIGINATED_FROM]->(f:Forest)
+WITH s, f, count(*) AS logs
+WITH gds.graph.project(
+       'supplierForest', s, f,
+       { sourceNodeLabels: labels(s),
+         targetNodeLabels: labels(f),
+         relationshipType: 'SOURCES_FROM',
+         relationshipProperties: { logs: toFloat(logs) } }
+     ) AS g
+RETURN g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels;
+// Expected: 44 suppliers + 47 forests = 91 nodes, 84 relationships
+// (85 logs, but one supplier-forest pair occurs twice).
+//
+// GDS older than 2.4 - use the legacy form instead:
+// CALL gds.graph.project.cypher('supplierForest',
+//   'MATCH (n) WHERE n:Supplier OR n:Forest RETURN id(n) AS id, labels(n) AS labels',
+//   'MATCH (s:Supplier)-[:SUPPLIED]->(:Log)-[:ORIGINATED_FROM]->(f:Forest)
+//    RETURN id(s) AS source, id(f) AS target, count(*) AS logs')
+
+// 5.2 Experiment A - NODE SIMILARITY with JACCARD (default metric)
+//     |shared forests| / |all forests of both suppliers|
+CALL gds.nodeSimilarity.stream('supplierForest', { topK: 10, similarityCutoff: 0.1 })
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1) AS a, gds.util.asNode(node2) AS b, similarity
+WHERE a.supplier_id < b.supplier_id                       // each pair once
+RETURN a.supplier_name AS supplier_A, b.supplier_name AS supplier_B,
+       round(similarity, 3) AS jaccard
+ORDER BY jaccard DESC, supplier_A
+LIMIT 10;
+
+// 5.3 Experiment B - NODE SIMILARITY with OVERLAP coefficient
+//     |shared| / |smaller set|  -> 1.0 when one supplier's forests are a
+//     subset of the other's (good for "can B fully cover A?")
+CALL gds.nodeSimilarity.stream('supplierForest',
+     { similarityMetric: 'OVERLAP', topK: 10, similarityCutoff: 0.1 })
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1) AS a, gds.util.asNode(node2) AS b, similarity
+WHERE a.supplier_id < b.supplier_id
+RETURN a.supplier_name AS supplier_A, b.supplier_name AS supplier_B,
+       round(similarity, 3) AS overlap
+ORDER BY overlap DESC, supplier_A
+LIMIT 10;
+
+// 5.4 Experiment C - WEIGHTED JACCARD using the number of logs per forest
+CALL gds.nodeSimilarity.stream('supplierForest',
+     { relationshipWeightProperty: 'logs', topK: 10, similarityCutoff: 0.1 })
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1) AS a, gds.util.asNode(node2) AS b, similarity
+WHERE a.supplier_id < b.supplier_id
+RETURN a.supplier_name AS supplier_A, b.supplier_name AS supplier_B,
+       round(similarity, 3) AS weighted_jaccard
+ORDER BY weighted_jaccard DESC, supplier_A
+LIMIT 10;
+
+// 5.5 THE BUSINESS ANSWER: write SIMILAR_TO relationships, then recommend
+//     active replacements for each inactive supplier.
+CALL gds.nodeSimilarity.write('supplierForest', {
+  topK: 5, similarityCutoff: 0.1,
+  writeRelationshipType: 'SIMILAR_TO', writeProperty: 'jaccard'
+})
+YIELD nodesCompared, relationshipsWritten;
+
+MATCH (old:Supplier {supplier_status: 'Inactive'})-[r:SIMILAR_TO]->(alt:Supplier {supplier_status: 'Active'})
+MATCH (old)-[:SUPPLIED]->(:Log)-[:ORIGINATED_FROM]->(f:Forest)<-[:ORIGINATED_FROM]-(:Log)<-[:SUPPLIED]-(alt)
+RETURN old.supplier_name AS inactive_supplier,
+       alt.supplier_name AS recommended_replacement,
+       alt.contact_name  AS contact,
+       alt.phone         AS phone,
+       round(r.jaccard, 3) AS jaccard,
+       collect(DISTINCT f.forest_name + ' (' + coalesce(f.certification, 'Uncertified') + ')') AS shared_forests
+ORDER BY inactive_supplier, jaccard DESC;
+
+// 5.6 (Optional extra experiment) K-NEAREST NEIGHBOURS on log properties
+//     "Which incoming logs are physically most like this log?" - used to
+//     predict yield for a new log from logs with known outcomes.
+//     Properties are min-max scaled first so stiffness (~15,000) does not
+//     swamp diameter (~400) and volume (~1.5).
+CALL gds.graph.drop('logProps', false) YIELD graphName;
+
+MATCH (l:Log) WHERE l.stiffness_moe IS NOT NULL
+WITH gds.graph.project('logProps', l, null, {
+       sourceNodeProperties: l { .diameter_mm, .volume_m3, .stiffness_moe }
+     }) AS g
+RETURN g.nodeCount;
+
+CALL gds.scaleProperties.mutate('logProps', {
+  nodeProperties: ['diameter_mm', 'volume_m3', 'stiffness_moe'],
+  scaler: 'MinMax', mutateProperty: 'scaled'
+}) YIELD nodePropertiesWritten;
+
+CALL gds.knn.stream('logProps', {
+  nodeProperties: { scaled: 'EUCLIDEAN' }, topK: 3,
+  randomSeed: 42, concurrency: 1, sampleRate: 1.0, deltaThreshold: 0.0
+})
+YIELD node1, node2, similarity
+WITH gds.util.asNode(node1) AS a, gds.util.asNode(node2) AS b, similarity
+WHERE a.log_id = 101
+RETURN a.log_id AS log, b.log_id AS similar_log,
+       b.diameter_mm AS diameter, b.volume_m3 AS volume, b.stiffness_moe AS moe,
+       round(similarity, 4) AS similarity
+ORDER BY similarity DESC;
+
+// 5.7 Clean up (also removes the written SIMILAR_TO relationships if wanted)
+CALL gds.graph.drop('supplierForest') YIELD graphName;
+CALL gds.graph.drop('logProps') YIELD graphName;
+// MATCH ()-[r:SIMILAR_TO]->() DELETE r;
+// MATCH (n) REMOVE n.betweenness;

@@ -1,0 +1,64 @@
+machine_id,machine_name,machine_type,machine_status
+1,Primary Saw Line 1,Primary Saw,Operational
+2,Primary Saw Line 2,Primary Saw,Operational
+3,Trim Line 1,Trimmer,Maintenance
+4,Trim Line 24,Trimmer,Operational
+5,Primary Saw Line 7,Primary Saw,Operational
+6,Primary Saw Line 36,Primary Saw,Operational
+7,Trim Line 25,Trimmer,Operational
+8,Primary Saw Line 18,Primary Saw,Operational
+9,Trim Line 15,Trimmer,Operational
+10,Primary Saw Line 7,Primary Saw,Operational
+11,Trim Line 32,Trimmer,Maintenance
+12,Trim Line 39,Trimmer,Operational
+13,Trim Line 23,Trimmer,Operational
+14,Primary Saw Line 33,Primary Saw,Operational
+15,Trim Line 20,Trimmer,Operational
+16,Trim Line 35,Trimmer,Operational
+17,Trim Line 31,Trimmer,Operational
+18,Trim Line 21,Trimmer,Operational
+19,Primary Saw Line 35,Primary Saw,Operational
+20,Primary Saw Line 31,Primary Saw,Maintenance
+21,Primary Saw Line 23,Primary Saw,Operational
+22,Primary Saw Line 6,Primary Saw,Operational
+23,Trim Line 8,Trimmer,Operational
+24,Primary Saw Line 5,Primary Saw,Operational
+25,Trim Line 31,Trimmer,Operational
+26,Primary Saw Line 26,Primary Saw,Operational
+27,Trim Line 27,Trimmer,Operational
+28,Trim Line 6,Trimmer,Maintenance
+29,Trim Line 7,Trimmer,Operational
+30,Trim Line 21,Trimmer,Operational
+31,Primary Saw Line 24,Primary Saw,Operational
+32,Primary Saw Line 25,Primary Saw,Operational
+33,Trim Line 11,Trimmer,Operational
+34,Primary Saw Line 22,Primary Saw,Operational
+35,Trim Line 11,Trimmer,Operational
+36,Primary Saw Line 30,Primary Saw,Operational
+37,Primary Saw Line 26,Primary Saw,Operational
+38,Primary Saw Line 24,Primary Saw,Offline
+39,Trim Line 15,Trimmer,Operational
+40,Primary Saw Line 12,Primary Saw,Operational
+41,Primary Saw Line 35,Primary Saw,Maintenance
+42,Primary Saw Line 24,Primary Saw,Maintenance
+43,Primary Saw Line 27,Primary Saw,Operational
+44,Primary Saw Line 13,Primary Saw,Operational
+45,Primary Saw Line 29,Primary Saw,Operational
+46,Primary Saw Line 31,Primary Saw,Operational
+47,Trim Line 17,Trimmer,Operational
+48,Trim Line 33,Trimmer,Maintenance
+49,Primary Saw Line 26,Primary Saw,Operational
+50,Trim Line 32,Trimmer,Maintenance
+51,Trim Line 35,Trimmer,Operational
+52,Primary Saw Line 15,Primary Saw,Maintenance
+53,Primary Saw Line 19,Primary Saw,Operational
+54,Trim Line 26,Trimmer,Operational
+55,Primary Saw Line 36,Primary Saw,Maintenance
+56,Trim Line 8,Trimmer,Maintenance
+57,Trim Line 31,Trimmer,Maintenance
+58,Primary Saw Line 30,Primary Saw,Operational
+59,Primary Saw Line 31,Primary Saw,Maintenance
+60,Primary Saw Line 29,Primary Saw,Operational
+61,Trim Line 18,Trimmer,Operational
+62,Primary Saw Line 26,Primary Saw,Operational
+63,Trim Line 9,Trimmer,Maintenance
